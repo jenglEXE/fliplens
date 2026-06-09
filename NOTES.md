@@ -185,3 +185,17 @@ own official programs.
 - Dropped direct listing creation on external platforms — requires API
   access we don't have. Replaced with listing draft generator that
   user posts manually.
+
+
+- Request to your API
+- Check cache
+    - In chache: return
+    - Check database
+        - In database: return
+        - Search ebay (BeautifulSoup)
+            - Set cache
+            - Set database
+            - return
+
+
+Think about shape of data
