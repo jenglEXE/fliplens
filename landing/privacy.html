@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — FlipLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0e0e0e;
+      --bg-card: #161616;
+      --border:  #272727;
+      --text:    #f0ede8;
+      --muted:   #777;
+      --accent:  #2563eb;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    nav {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 50;
+      background: rgba(14,14,14,.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.1875rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -.03em;
+      display: flex;
+      align-items: center;
+      gap: .375rem;
+    }
+
+    .logo-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-bottom: 1px;
+    }
+
+    .main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 7rem 1.5rem 6rem;
+    }
+
+    .page-eyebrow {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .6875rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -.025em;
+      line-height: 1.15;
+      margin-bottom: .625rem;
+    }
+
+    .updated {
+      font-size: .8125rem;
+      color: var(--muted);
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      margin-top: 2.5rem;
+      margin-bottom: .625rem;
+      color: var(--text);
+    }
+
+    p {
+      font-size: .9375rem;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: .75rem;
+    }
+
+    p strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.75rem 0;
+      margin-top: 4rem;
+    }
+
+    .footer-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      font-size: .8125rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-note { font-size: .75rem; color: #444; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-dot"></span>
+        FlipLens
+      </a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <p class="page-eyebrow">Legal</p>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: June 2026</p>
+
+    <h2>What we collect</h2>
+    <p>When you create an account, we collect your email address and a hashed version of your password. We never store your plain text password. When you search, we log the search query and timestamp associated with your account. We collect basic usage data such as which features you use and how often.</p>
+
+    <h2>What we don't collect</h2>
+    <p>We do not collect your name, phone number, address, or any payment card details. Payment processing is handled entirely by Stripe — we never see or store your card number.</p>
+
+    <h2>How we use your data</h2>
+    <p>We use your email to identify your account and send you transactional emails such as password resets. We use your search history to display it back to you in the app. We use aggregate usage data to improve the product.</p>
+
+    <h2>What we never do</h2>
+    <p><strong>We will never sell, rent, or share your personal data with third parties for advertising or marketing purposes.</strong> This is a founding principle of FlipLens, not a policy subject to change without notice.</p>
+
+    <h2>Third party services</h2>
+    <p>FlipLens uses Stripe for payment processing and Supabase for database hosting. Both are reputable services with their own privacy policies. We use official APIs from Discogs, Reverb, Etsy, JustTCG, and eBay to fetch pricing data — we do not share your data with these services beyond what is necessary to perform a search.</p>
+
+    <h2>Data retention</h2>
+    <p>We retain your account data for as long as your account is active. If you delete your account, your personal data will be deleted within 30 days. Search history and cached results may be retained in anonymized form for product improvement.</p>
+
+    <h2>Your rights</h2>
+    <p>You can request a copy of your data or ask us to delete your account at any time by contacting us. We will respond within 30 days.</p>
+
+    <h2>Contact</h2>
+    <p>For privacy questions, contact us at <strong>privacy@fliplens.com</strong>.</p>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <a href="index.html" class="logo" style="font-size:1rem">
+        <span class="logo-dot"></span>
+        FlipLens
+      </a>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="mailto:hello@fliplens.com">Contact</a>
+      </div>
+      <span class="footer-note">© 2026 FlipLens</span>
+    </div>
+  </footer>
+
+</body>
+</html>
