@@ -166,7 +166,8 @@ own official programs.
 - [x] routers/search.py — GET /search/ with aggregation, stats, 
       caching, filtering, source selection. Fixed offset-naive vs
       offset-aware datetime sort bug.
-- [x] routers/users.py — placeholder
+- [x] routers/users.py — register, login, /me endpoint. JWT auth
+      with bcrypt password hashing. Supabase schema set up.
 - [x] routers/subscriptions.py — placeholder
 - [x] integrations/base.py — normalize_listing() shared function
 - [x] integrations/discogs.py — working, no pricing data yet
@@ -175,10 +176,8 @@ own official programs.
 - [x] integrations/justtcg.py — working, real prices, per-variant
 
 ### Still to build
-- [ ] routers/users.py — real auth (register, login, JWT, bcrypt)
 - [ ] routers/subscriptions.py — Stripe integration
 - [ ] routers/search.py — search history endpoint
-- [ ] Supabase schema setup
 - [ ] Landing page
 - [ ] Desktop client (PyQt6)
 - [ ] Mobile app (React Native) — Phase 3
@@ -243,9 +242,11 @@ own official programs.
 - Dropped Redis in favor of in-memory Python cache
 - Dropped SQLite in favor of Supabase (PostgreSQL)
 - Discogs endpoint changed from /marketplace/search to /database/search
-- Reverb switched from /listings/sold to /listings (active listings) —
-  sold endpoint is seller-only, not public search
+- Reverb switched from /listings/sold to /listings (active listings)
 - JustTCG auth changed from Bearer token to X-API-Key header
 - JustTCG response key is 'data' not 'cards'
 - JustTCG prices live inside variants[] array, one per condition
 - search.py sort fixed — strip tzinfo before comparing datetimes
+- bcrypt pinned to 4.0.1 — newer versions incompatible with passlib
+- Supabase schema created — all 6 tables live
+- users.py auth complete — register, login, /me all working
