@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlipLens — Know What It's Worth Before You Buy</title>
+  <meta name="description" content="Search what an item has actually sold for across Discogs, Reverb, Etsy, and more. Real transaction data, visualized. No AI verdict. $5/month.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img, svg { display: block; max-width: 100%; }
+
+    /* ── Tokens ── */
+    :root {
+      --bg:         #0e0e0e;
+      --bg-card:    #161616;
+      --bg-card-2:  #1e1e1e;
+      --border:     #272727;
+      --border-mid: #333;
+      --text:       #f0ede8;
+      --muted:      #777;
+      --accent:     #2563eb;
+      --accent-lo:  rgba(37,99,235,.10);
+      --accent-mid: rgba(37,99,235,.25);
+      --green:      #4ade80;
+      --orange:     #fb923c;
+      --purple:     #c084fc;
+      --sky:        #38bdf8;
+      --red:        #f87171;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Typography helpers ── */
+    .eyebrow {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .6875rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1, h2, h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      letter-spacing: -.025em;
+      line-height: 1.15;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    section { padding: 6rem 0; }
+
+    hr.rule {
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 50;
+      background: rgba(14,14,14,.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Logo — all white, clean wordmark with a small blue circle as the lens dot */
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.1875rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -.03em;
+      display: flex;
+      align-items: center;
+      gap: .375rem;
+    }
+
+    .logo-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-bottom: 1px;
+    }
+
+    .nav-cta {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: .875rem;
+      color: #fff;
+      background: var(--accent);
+      padding: .45rem 1.125rem;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .nav-cta:hover { opacity: .82; }
+
+    /* ── Hero ── */
+    .hero {
+      padding-top: 7.5rem;
+      padding-bottom: 5rem;
+      text-align: center;
+    }
+
+    .hero .eyebrow { margin-bottom: 1.25rem; }
+
+    .hero h1 {
+      font-size: clamp(2.125rem, 5.5vw, 3.75rem);
+      font-weight: 700;
+      max-width: 720px;
+      margin: 0 auto 1.25rem;
+    }
+
+    .hero-sub {
+      font-size: 1.0625rem;
+      color: var(--muted);
+      max-width: 500px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: .875rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 3.5rem;
+    }
+
+    .btn-primary {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: .9375rem;
+      color: #fff;
+      background: var(--accent);
+      padding: .8rem 1.75rem;
+      border-radius: 7px;
+      text-decoration: none;
+      transition: opacity .15s, transform .15s;
+    }
+    .btn-primary:hover { opacity: .85; transform: translateY(-1px); }
+
+    .btn-ghost {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+      font-size: .9375rem;
+      color: var(--muted);
+      background: transparent;
+      padding: .8rem 1.75rem;
+      border-radius: 7px;
+      border: 1px solid var(--border-mid);
+      text-decoration: none;
+      transition: color .15s, border-color .15s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: #555; }
+
+    /* ── Scatter widget ── */
+    .scatter-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .scatter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6875rem 1rem;
+      border-bottom: 1px solid var(--border);
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .scatter-query {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .8125rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .scatter-query strong { color: var(--text); font-weight: 600; }
+
+    .scatter-stats {
+      display: flex;
+      gap: 1.25rem;
+    }
+
+    .sstat { text-align: right; }
+    .sstat-label {
+      font-size: .6rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .sstat-val {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .875rem;
+      font-weight: 600;
+    }
+    .sstat-val.avg { color: var(--accent); }
+    .sstat-val.hi  { color: var(--green); }
+    .sstat-val.lo  { color: var(--red); }
+
+    #scatter {
+      display: block;
+      width: 100%;
+      height: 240px;
+    }
+
+    .scatter-legend {
+      display: flex;
+      gap: 1rem;
+      padding: .5rem 1rem;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      font-size: .6875rem;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Problem section ── */
+    .problem h2 {
+      font-size: clamp(1.625rem, 3.5vw, 2.25rem);
+      margin-bottom: 1rem;
+      max-width: 520px;
+    }
+
+    .problem-lead {
+      color: var(--muted);
+      max-width: 480px;
+      margin-bottom: 3rem;
+      line-height: 1.75;
+    }
+
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+    }
+
+    .pain-cell {
+      background: var(--bg-card);
+      padding: 1.5rem;
+    }
+
+    .pain-cell h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .9375rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      margin-bottom: .4rem;
+    }
+
+    .pain-cell p {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── Features ── */
+    .features h2 {
+      font-size: clamp(1.625rem, 3.5vw, 2.25rem);
+      margin-bottom: 1rem;
+      max-width: 520px;
+    }
+
+    .features-lead {
+      color: var(--muted);
+      max-width: 480px;
+      margin-bottom: 3rem;
+      line-height: 1.75;
+    }
+
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .feat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 1.625rem;
+      transition: border-color .2s;
+    }
+    .feat-card:hover { border-color: var(--border-mid); }
+
+    .feat-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 7px;
+      background: var(--accent-lo);
+      border: 1px solid var(--accent-mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .feat-card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .9375rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      margin-bottom: .375rem;
+    }
+
+    .feat-card p {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── Sources band ── */
+    .sources-band {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 0;
+      text-align: center;
+    }
+
+    .sources-band .eyebrow { margin-bottom: 1.75rem; }
+
+    .sources-list {
+      display: flex;
+      justify-content: center;
+      gap: .875rem;
+      flex-wrap: wrap;
+    }
+
+    .source-chip {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .4rem .9rem;
+      background: var(--bg);
+      border: 1px solid var(--border-mid);
+      border-radius: 999px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .8125rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .source-chip .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .source-chip.soon { opacity: .45; }
+
+    /* ── Pricing ── */
+    .pricing h2 {
+      font-size: clamp(1.625rem, 3.5vw, 2.25rem);
+      margin-bottom: 1rem;
+    }
+
+    .pricing-lead {
+      color: var(--muted);
+      max-width: 420px;
+      margin-bottom: 3rem;
+      line-height: 1.75;
+    }
+
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 1.25rem;
+      max-width: 640px;
+    }
+
+    .plan-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2rem;
+    }
+
+    .plan-card.featured {
+      border-color: var(--accent);
+      background: var(--accent-lo);
+    }
+
+    .plan-tier {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .6875rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .625rem;
+    }
+    .plan-card.featured .plan-tier { color: var(--accent); }
+
+    .plan-price {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.625rem;
+      font-weight: 700;
+      letter-spacing: -.04em;
+      line-height: 1;
+      margin-bottom: .25rem;
+    }
+
+    .plan-period {
+      font-size: .8125rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .plan-features li {
+      font-size: .875rem;
+      color: var(--muted);
+      display: flex;
+      align-items: flex-start;
+      gap: .5rem;
+    }
+
+    .plan-features li .check { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+    .plan-features li.dim { opacity: .35; }
+    .plan-features li.dim .check { color: var(--muted); }
+
+    .btn-plan {
+      display: block;
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: .9375rem;
+      padding: .725rem 1.5rem;
+      border-radius: 7px;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .btn-plan:hover { opacity: .82; }
+    .btn-plan.free { background: var(--bg-card-2); color: var(--text); border: 1px solid var(--border-mid); }
+    .btn-plan.paid { background: var(--accent); color: #fff; }
+
+    /* ── Philosophy ── */
+    .philosophy {
+      border-top: 1px solid var(--border);
+      padding: 5rem 0;
+    }
+
+    .philosophy-inner {
+      max-width: 600px;
+    }
+
+    .philosophy h2 {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      margin-bottom: 1.25rem;
+    }
+
+    .philosophy p {
+      color: var(--muted);
+      margin-bottom: .875rem;
+      line-height: 1.8;
+      font-size: .9375rem;
+    }
+
+    .philosophy p:last-child { margin-bottom: 0; color: #494949; font-size: .875rem; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.75rem 0;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      font-size: .8125rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-note {
+      font-size: .75rem;
+      color: #444;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      section { padding: 4rem 0; }
+      .hero { padding-top: 6rem; padding-bottom: 3.5rem; }
+      .scatter-stats { gap: .75rem; }
+      .sstat-label { display: none; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <span class="logo-dot"></span>
+        FlipLens
+      </a>
+      <a href="#pricing" class="nav-cta">Get started</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">Price research for professional resellers</p>
+      <h1>Know what it's worth before you buy</h1>
+      <p class="hero-sub">Search what an item has actually sold for across Discogs, Reverb, Etsy, and more — real transaction data, visualized. No AI verdict. Just the numbers.</p>
+      <div class="hero-actions">
+        <a href="#pricing" class="btn-primary">Start for free</a>
+        <a href="#how-it-works" class="btn-ghost">See how it works</a>
+      </div>
+
+      <!-- Scatterplot demo -->
+      <div class="scatter-wrap">
+        <div class="scatter-bar">
+          <div class="scatter-query">Search: <strong>"1st edition Charizard"</strong></div>
+          <div class="scatter-stats">
+            <div class="sstat">
+              <div class="sstat-label">Avg</div>
+              <div class="sstat-val avg" id="s-avg">—</div>
+            </div>
+            <div class="sstat">
+              <div class="sstat-label">High</div>
+              <div class="sstat-val hi" id="s-hi">—</div>
+            </div>
+            <div class="sstat">
+              <div class="sstat-label">Low</div>
+              <div class="sstat-val lo" id="s-lo">—</div>
+            </div>
+          </div>
+        </div>
+        <canvas id="scatter"></canvas>
+        <div class="scatter-legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#4ade80"></span>Discogs</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#38bdf8"></span>Reverb</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#fb923c"></span>Etsy</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#c084fc"></span>JustTCG</div>
+          <div class="legend-item" style="opacity:.4"><span class="legend-dot" style="background:#facc15"></span>eBay <span style="margin-left:.2rem;font-size:.6rem">soon</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <hr class="rule">
+  <section class="problem" id="how-it-works">
+    <div class="container">
+      <p class="eyebrow" style="margin-bottom:.875rem">The problem</p>
+      <h2>Price data is scattered. Your time at a sale isn't.</h2>
+      <p class="problem-lead">You're standing at an estate sale. You have 30 seconds. The current tools are fragmented, slow, and built for sellers — not buyers.</p>
+      <div class="pain-grid">
+        <div class="pain-cell">
+          <h3>Too many tabs</h3>
+          <p>Discogs, Reverb, Etsy, eBay — each in a separate window, no way to see the full picture at once.</p>
+        </div>
+        <div class="pain-cell">
+          <h3>AI verdicts remove your judgment</h3>
+          <p>Competitors deliver a "worth it / skip" button. But you know your market better than any model does.</p>
+        </div>
+        <div class="pain-cell">
+          <h3>Scan limits penalize power users</h3>
+          <p>The tools that cost the most also cap your searches — right when you're at your busiest.</p>
+        </div>
+        <div class="pain-cell">
+          <h3>Listings aren't sales</h3>
+          <p>What something is listed for and what it actually sells for can be miles apart. FlipLens shows sold data.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <hr class="rule">
+  <section class="features">
+    <div class="container">
+      <p class="eyebrow" style="margin-bottom:.875rem">How it works</p>
+      <h2>One search. Every platform. Real data.</h2>
+      <p class="features-lead">Type what you're holding. Get a scatterplot of what it has actually sold for across every connected marketplace — in seconds.</p>
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-icon">📊</div>
+          <h3>Scatterplot visualization</h3>
+          <p>Every data point plotted by date and price. See the full distribution — not just an average that hides the spread.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🔍</div>
+          <h3>Cross-marketplace search</h3>
+          <p>Discogs, Reverb, Etsy, and JustTCG in a single query. eBay integration coming once Partner Network access is confirmed.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">⚡</div>
+          <h3>Results in seconds</h3>
+          <p>Built-in caching means repeat searches return instantly. No waiting while you're standing on a floor.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🚫</div>
+          <h3>No AI, no verdict</h3>
+          <p>FlipLens shows you the data. You make the call. Your expertise is the point — we don't replace it.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🔒</div>
+          <h3>Your data stays yours</h3>
+          <p>We will never sell your search history or usage data. That's a founding principle, not a policy subject to revision.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">📱</div>
+          <h3>Desktop and mobile</h3>
+          <p>A full desktop client for deep research at home, and a mobile app for fast lookups in the field. Both included.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOURCES BAND -->
+  <div class="sources-band">
+    <div class="container">
+      <p class="eyebrow">Live data from official APIs — no scraping</p>
+      <div class="sources-list">
+        <div class="source-chip"><span class="dot" style="background:#4ade80"></span>Discogs</div>
+        <div class="source-chip"><span class="dot" style="background:#38bdf8"></span>Reverb</div>
+        <div class="source-chip"><span class="dot" style="background:#fb923c"></span>Etsy</div>
+        <div class="source-chip"><span class="dot" style="background:#c084fc"></span>JustTCG</div>
+        <div class="source-chip soon"><span class="dot" style="background:#facc15"></span>eBay <span style="font-size:.7rem;margin-left:.2rem">coming soon</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <p class="eyebrow" style="margin-bottom:.875rem">Pricing</p>
+      <h2>Simple. No tricks.</h2>
+      <p class="pricing-lead">Free to try. $5/month for unlimited access. No scan limits, no upsells, no AI add-ons to pay for separately.</p>
+      <div class="plan-grid">
+        <div class="plan-card">
+          <div class="plan-tier">Free</div>
+          <div class="plan-price">$0</div>
+          <div class="plan-period">forever</div>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> 10 searches per day</li>
+            <li><span class="check">✓</span> All data sources</li>
+            <li><span class="check">✓</span> Scatterplot visualization</li>
+            <li class="dim"><span class="check">✓</span> Unlimited searches</li>
+            <li class="dim"><span class="check">✓</span> Search history</li>
+            <li class="dim"><span class="check">✓</span> Price tracking</li>
+          </ul>
+          <a href="#" class="btn-plan free">Start free</a>
+        </div>
+        <div class="plan-card featured">
+          <div class="plan-tier">Pro</div>
+          <div class="plan-price">$5</div>
+          <div class="plan-period">per month</div>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> Unlimited searches</li>
+            <li><span class="check">✓</span> All data sources</li>
+            <li><span class="check">✓</span> Scatterplot visualization</li>
+            <li><span class="check">✓</span> Search history</li>
+            <li><span class="check">✓</span> Price tracking</li>
+            <li><span class="check">✓</span> Desktop + mobile access</li>
+          </ul>
+          <a href="#" class="btn-plan paid">Get Pro</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHILOSOPHY -->
+  <div class="philosophy">
+    <div class="container">
+      <div class="philosophy-inner">
+        <h2>Built for buyers, not platforms.</h2>
+        <p>The tools that exist today are built around the interests of the platforms — scan limits, AI verdicts, opaque sourcing, and prices that penalize the people who use them most.</p>
+        <p>FlipLens is a different bet: give people the raw data, trust their expertise, and charge a fair price for it. No advertising. No data selling. No exceptions.</p>
+        <p>All data is sourced through official developer APIs. No scraping. No gray areas.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <a href="#" class="logo" style="font-size:1rem">
+          <span class="logo-dot"></span>
+          FlipLens
+        </a>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Contact</a>
+        </div>
+        <span class="footer-note">© 2026 FlipLens</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCATTERPLOT ANIMATION -->
+  <script>
+    (function () {
+      const canvas = document.getElementById('scatter');
+      const ctx    = canvas.getContext('2d');
+      const DPR    = window.devicePixelRatio || 1;
+
+      function resize() {
+        const w = canvas.parentElement.clientWidth;
+        canvas.width  = w * DPR;
+        canvas.height = 240 * DPR;
+        canvas.style.width  = w + 'px';
+        canvas.style.height = '240px';
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', () => { resize(); redraw(prog); });
+
+      /* Fake-but-realistic price data for 1st ed Charizard */
+      const palette = ['#4ade80','#38bdf8','#fb923c','#c084fc'];
+      const raw = [
+        280,310,295,420,380,340,460,500,390,310,
+        275,350,410,330,490,370,440,320,480,360,
+        290,430,355,475,315,395,345,465,305,385,
+        450,270,415,485,325,375,435,295,510,365
+      ];
+
+      const now = Date.now();
+      const pts = raw.map((price, i) => ({
+        price,
+        date : now - Math.random() * 90 * 86400000,
+        color: palette[i % palette.length],
+        r    : 3 + Math.random() * 2.2
+      }));
+
+      const hi  = Math.max(...raw);
+      const lo  = Math.min(...raw);
+      const avg = Math.round(raw.reduce((a,b)=>a+b,0)/raw.length);
+      const minDate = Math.min(...pts.map(p=>p.date));
+
+      document.getElementById('s-avg').textContent = '$' + avg;
+      document.getElementById('s-hi').textContent  = '$' + hi;
+      document.getElementById('s-lo').textContent  = '$' + lo;
+
+      const PAD = { t:16, r:18, b:28, l:50 };
+
+      function cx(date) {
+        const W = canvas.width / DPR;
+        return PAD.l + (date - minDate) / (now - minDate) * (W - PAD.l - PAD.r);
+      }
+      function cy(price) {
+        const H = canvas.height / DPR;
+        const minP = lo - 25, maxP = hi + 25;
+        return PAD.t + (1 - (price - minP)/(maxP - minP)) * (H - PAD.t - PAD.b);
+      }
+
+      function redraw(p) {
+        const W = canvas.width / DPR;
+        const H = canvas.height / DPR;
+        ctx.clearRect(0,0,W,H);
+
+        /* Grid */
+        const steps = 4;
+        for (let i = 0; i <= steps; i++) {
+          const price = lo - 25 + ((hi + 25) - (lo - 25)) * (i / steps);
+          const y = cy(price);
+          ctx.strokeStyle = '#1c1c1c';
+          ctx.lineWidth   = 1;
+          ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(W - PAD.r, y); ctx.stroke();
+          ctx.fillStyle   = '#4a4a4a';
+          ctx.font        = '10px Inter,sans-serif';
+          ctx.textAlign   = 'right';
+          ctx.fillText('$' + Math.round(price), PAD.l - 5, y + 3.5);
+        }
+
+        /* X-axis month labels */
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        ctx.fillStyle = '#4a4a4a';
+        ctx.font      = '10px Inter,sans-serif';
+        ctx.textAlign = 'center';
+        for (let i = 0; i <= 3; i++) {
+          const d = new Date(minDate + (now - minDate) * (i/3));
+          ctx.fillText(months[d.getMonth()], cx(minDate + (now - minDate)*(i/3)), H - 7);
+        }
+
+        /* Avg line — fades in after points start appearing */
+        if (p > 0.25) {
+          const lineP = Math.min(1, (p - 0.25) / 0.75);
+          const ay    = cy(avg);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(37,99,235,' + (.55 * lineP) + ')';
+          ctx.lineWidth   = 1.5;
+          ctx.setLineDash([5,5]);
+          ctx.beginPath();
+          ctx.moveTo(PAD.l, ay);
+          ctx.lineTo(PAD.l + lineP * (W - PAD.l - PAD.r), ay);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        /* Points */
+        const show = Math.floor(p * pts.length);
+        for (let i = 0; i < show; i++) {
+          const pt = pts[i];
+          ctx.beginPath();
+          ctx.arc(cx(pt.date), cy(pt.price), pt.r, 0, Math.PI*2);
+          ctx.fillStyle   = pt.color;
+          ctx.globalAlpha = .85;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      let prog = 0, start = null;
+      const DUR = 1500;
+
+      function tick(ts) {
+        if (!start) start = ts;
+        const t = Math.min((ts - start) / DUR, 1);
+        prog = 1 - Math.pow(1 - t, 3); // ease out cubic
+        redraw(prog);
+        if (t < 1) requestAnimationFrame(tick);
+      }
+
+      const obs = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) { requestAnimationFrame(tick); obs.disconnect(); }
+      }, { threshold: 0.2 });
+      obs.observe(canvas);
+    })();
+  </script>
+</body>
+</html>
