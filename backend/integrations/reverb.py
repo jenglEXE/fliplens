@@ -27,7 +27,7 @@ def search(query: str, filters: dict = {}) -> list:
 
     try:
         response = requests.get(
-            f'{BASE_URL}/listings/sold',
+            f'{BASE_URL}/listings',
             headers=HEADERS,
             params=params
         )
@@ -35,6 +35,8 @@ def search(query: str, filters: dict = {}) -> list:
         data = response.json()
     except Exception as e:
         print(f'Reverb search error: {e}')
+        if hasattr(e, 'response') and e.response is not None:
+            print(f'Reverb response body: {e.response.text}')
         return []
     
     listings = []
@@ -52,7 +54,7 @@ def search(query: str, filters: dict = {}) -> list:
                 title=item.get('title', 'Unknown'),
                 sold_price=price,
                 currency=currency,
-                sold_date=item.get('sold_at', ''),
+                sold_date=item.get('created_at', ''),
                 condition=item.get('condition', {}).get('display_name', 'Unknown'),
                 url=item.get('_links', {}).get('web', {}).get('href', ''),
                 thumbnail=thumbnail,

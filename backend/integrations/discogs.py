@@ -25,7 +25,7 @@ def search(query: str, filters:dict = {}) -> list:
     
     try:
         response = requests.get(
-            f'{BASE_URL}/marketplace/search',
+            f'{BASE_URL}/database/search',
             headers=HEADERS,
             params=params
         )
@@ -46,7 +46,7 @@ def search(query: str, filters:dict = {}) -> list:
                 currency=item.get('price', {}).get('currency', 'USD'),
                 sold_date=item.get('posted', ''),
                 condition=item.get('condition', 'Unknown'),
-                url=item.get('uri', ''),
+                url=f'https://www.discogs.com{item.get("uri", "")}',
                 thumbnail=item.get('thumbnail', ''),
                 category='Music'
             )

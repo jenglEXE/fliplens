@@ -36,27 +36,52 @@ own decision.
 ## Data Sources
 Priority order:
 1. Discogs — music, vinyl, CDs (free, instant access, 60 req/min)
-2. Reverb — musical instruments and gear (free, apply, flexible limits)
+   - Personal access token obtained ✅
+   - Uses /database/search endpoint — returns catalog metadata, not
+     marketplace pricing. sold_price is 0 for all results. Pricing
+     fix deferred — need to investigate marketplace endpoint.
+   - URLs fixed — now return full https://www.discogs.com/... links
+2. Reverb — musical instruments and gear (free, personal token)
+   - Personal access token obtained ✅
+   - Switched from /listings/sold to /listings (active listings) —
+     /listings/sold is seller-only, not a public search endpoint.
+   - Returns active listing prices, not sold history. Noted as known
+     limitation. sold_date uses created_at as fallback.
+   - Accept-Version: 3.0 header required
 3. Etsy — vintage, antiques, handmade
-  - 5,000 requests per day = ~208 per hour
-  - With a 60 minute cache, each unique search only hits Etsy once per hour
-  - So you'd need 5,000 unique different searches in a single day before hitting the limit
-  - At early scale that's essentially unlimited
-    - QPS is more relevant; add small delay between requests as precaution
-4. JustTCG — trading cards: Pokemon, MTG, Yu-Gi-Oh (free, instant, 
-   20 results/call)
+   - API key obtained, pending approval ✅
+   - Returns 403 Forbidden until approval granted — expected behavior
+   - Rate limit: 5 QPS, 5,000 QPD
+4. JustTCG — trading cards: Pokemon, MTG, Yu-Gi-Oh
+   - Active and working ✅
+   - Auth uses X-API-Key header (not Bearer token)
+   - Response structure: data[] → variants[] → price field
+   - One listing created per variant (condition-specific pricing)
+   - game param currently hardcoded to 'pokemon' — TODO: make dynamic
+   - lastUpdated is Unix timestamp — converted to ISO datetime
 5. eBay — general marketplace (pursuing via Partner Network)
 
-Note: As additional legitimate API access becomes available, sources 
-will be added. Scraping is a last resort and temporary by design.
+---
+
+## Known Issues / Parked
+- Discogs sold_price always 0 — /database/search doesn't return 
+  marketplace pricing. Need to investigate correct endpoint.
+- Reverb returns active listings not sold history — known limitation,
+  documented in code.
+- JustTCG game param hardcoded to 'pokemon' — needs to be made
+  dynamic based on query or search all games.
+- Discogs thumbnails empty — not returned by /database/search.
+- Server must be started from VS Code integrated terminal (venv 
+  activates automatically). Run from fliplens root:
+  python -m uvicorn backend.main:app --reload
 
 ---
 
 ## API Application Status
-- [ ] Discogs — apply immediately, instant approval
-- [ ] Reverb — apply immediately, flexible approval
-- [ ] Etsy — apply immediately, standard approval
-- [ ] JustTCG — apply immediately, instant approval
+- [x] Discogs — personal access token obtained
+- [x] Reverb — personal access token obtained
+- [x] Etsy — key obtained, pending approval
+- [x] JustTCG — active and working
 - [ ] eBay Partner Network — apply once landing page is live
 - [ ] eBay Developer API — apply once product has real users
 
@@ -128,6 +153,38 @@ own official programs.
 
 ---
 
+## Current Build Status
+### Backend (in progress)
+- [x] config.py — environment variables, API keys, rate limit constants
+- [x] cache.py — in-memory cache with normalize_key, get, set, 
+      clear_expired, cache_size
+- [x] database.py — Supabase singleton client via get_db()
+- [x] models.py — dataclasses: User, Search, Listing, PriceHistory, 
+      Favorite, Subscription, SearchResult
+- [x] main.py — FastAPI app, CORS middleware, router registration, 
+      background cache cleanup task
+- [x] routers/search.py — GET /search/ with aggregation, stats, 
+      caching, filtering, source selection. Fixed offset-naive vs
+      offset-aware datetime sort bug.
+- [x] routers/users.py — placeholder
+- [x] routers/subscriptions.py — placeholder
+- [x] integrations/base.py — normalize_listing() shared function
+- [x] integrations/discogs.py — working, no pricing data yet
+- [x] integrations/reverb.py — working, active listings only
+- [x] integrations/etsy.py — 403 pending approval
+- [x] integrations/justtcg.py — working, real prices, per-variant
+
+### Still to build
+- [ ] routers/users.py — real auth (register, login, JWT, bcrypt)
+- [ ] routers/subscriptions.py — Stripe integration
+- [ ] routers/search.py — search history endpoint
+- [ ] Supabase schema setup
+- [ ] Landing page
+- [ ] Desktop client (PyQt6)
+- [ ] Mobile app (React Native) — Phase 3
+
+---
+
 ## Pre-Launch Checklist
 - [ ] Set up proxy IP rotation for production server (if scraping needed)
 - [ ] Write plain English privacy policy
@@ -136,17 +193,18 @@ own official programs.
 - [ ] Set up error monitoring
 - [ ] Load testing before going public
 - [ ] Set up domain name
+- [ ] Legal — Terms of Service, Privacy Policy, consider LLC formation
 
 ---
 
-## Polish Items
+## Polish Items (Desktop Client)
 - Fix arrows for font size in settings
 - Fix stop fetching button color visual feedback
 - Implement NoScroll functions in search tab
 - If applicable, implement pull-down menu for categories
 - Fix buying format names if compatible with eBay API
-- Put rounded white square inside free shipping and returns accepted
-  checkboxes when ticked
+- Put rounded white square inside free shipping and returns 
+  accepted checkboxes when ticked
 - Change color of weekends in calendar popup for end date
 
 ---
@@ -158,19 +216,19 @@ own official programs.
 - Hamburger menu (deferred from initial build)
 - Profit calculator
 - Inventory tracking
-- Listing draft generator — based on sold data, suggests title,
-  description, price, and starting bid. User copies and posts manually
-  to any platform. No API required.
-- "List on eBay" affiliate button — links to eBay listing creation
-  page via eBay Partner Network affiliate URL. Earns commission while
-  giving user a direct path to post.
-- Reverb pagination — currently fetches page 1 only. Follow _links.next 
-  to paginate through all results for more complete price data.
-- Reverb HAL+JSON links — currently hardcoding URLs. Should follow 
-  _links from root API response to be resilient to URL structure changes.
-- Books integration — waiting on eBay API access. eBay sold listings 
-  searched by ISBN or title/author is the best source for real used/rare book pricing. 
-  AbeBooks API deprecated, no viable alternative currently.
+- Listing draft generator
+- "List on eBay" affiliate button
+- Reverb pagination — currently fetches page 1 only
+- Reverb HAL+JSON links — currently hardcoding URLs
+- Books integration — waiting on eBay API access
+- Redis cache — replace in-memory cache when multiple server 
+  instances are needed
+- Search history — per user search history endpoint
+- Sneakers (StockX/GOAT) — no legitimate API, deferred
+- Luxury watches (Chrono24) — no legitimate API, deferred
+- JustTCG game param — make dynamic based on query or search all games
+- Discogs pricing — investigate marketplace endpoint for real prices
+
 ---
 
 ## Decisions Log
@@ -178,35 +236,16 @@ own official programs.
 - Dropped Facebook Marketplace (no public API, high ban risk)
 - Dropped Craigslist (ToS too aggressive, legal risk)
 - Dropped eBay API initial attempt (denied, reapplying with product)
-- Dropped Amazon (PA API requires affiliate sales quota, 
-  SP-API $1,400/yr)
+- Dropped Amazon (PA API requires affiliate sales quota, SP-API $1,400/yr)
 - Dropped Poshmark (no public API)
-- Dropped Playwright/scraping at launch — unnecessary with legitimate 
-  APIs available
-- Dropped Redis in favor of in-memory Python cache — simpler, free, 
-  sufficient for early scale
-- Dropped SQLite in favor of Supabase (PostgreSQL) — hosted databases 
-  persist across server deploys, file system storage does not
-- Chose Discogs, Reverb, Etsy, JustTCG as launch data sources —
-  legitimate APIs, strong flipper category coverage, zero legal risk
-- Chose in-memory cache over Redis — free, zero setup, upgradeable later
-- Deferred proxy IP rotation — only needed if scraping becomes necessary
-- Deferred mobile app to Phase 3 — backend first
-- No AI features by design — this is a differentiator, not a limitation
-- Dropped direct listing creation on external platforms — requires API
-  access we don't have. Replaced with listing draft generator that
-  user posts manually.
-
-
-- Request to your API
-- Check cache
-    - In chache: return
-    - Check database
-        - In database: return
-        - Search ebay (BeautifulSoup)
-            - Set cache
-            - Set database
-            - return
-
-
-Think about shape of data
+- Dropped Playwright/scraping at launch
+- Dropped BeautifulSoup — unnecessary without scraping
+- Dropped Redis in favor of in-memory Python cache
+- Dropped SQLite in favor of Supabase (PostgreSQL)
+- Discogs endpoint changed from /marketplace/search to /database/search
+- Reverb switched from /listings/sold to /listings (active listings) —
+  sold endpoint is seller-only, not public search
+- JustTCG auth changed from Bearer token to X-API-Key header
+- JustTCG response key is 'data' not 'cards'
+- JustTCG prices live inside variants[] array, one per condition
+- search.py sort fixed — strip tzinfo before comparing datetimes

@@ -1,10 +1,11 @@
 import requests
+from datetime import datetime
 from backend.config import JUSTTCG_KEY
 from backend.integrations.base import normalize_listing
 
 BASE_URL = 'https://api.justtcg.com/v1'
 HEADERS = {
-    'Authorization': f'Bearer {JUSTTCG_KEY}',
+    'X-API-Key': JUSTTCG_KEY,
     'User-Agent': 'FlipLens/0.1'
 }
 
@@ -16,7 +17,8 @@ def search(query: str, filters: dict = {}) -> list:
     params = {
         'q': query,
         'limit': 20,
-        'priceHistoryDuration': '30d'
+        'priceHistoryDuration': '30d',
+        'game': 'pokemon' # TODO: make dynamic based on query or search all games
     }
 
     if filters.get('condition'):
@@ -35,22 +37,25 @@ def search(query: str, filters: dict = {}) -> list:
         return []
     
     listings = []
-    for item in data.get('cards', []):
+    for item in data.get('data', []):
         try:
-            price = item.get('marketPrice') or item.get('price', 0)
-            listing = normalize_listing(
-                listing_id=item.get('id'),
-                source='justtcg',
-                title=item.get('name', 'Unknown'),
-                sold_price=price,
-                currency='USD',
-                sold_date=item.get('updatedAt', ''),
-                condition=item.get('condition', 'Unknown'),
-                url=item.get('url', ''),
-                thumbnail=item.get('imageUrl', ''),
-                category='Trading Cards'
-            )
-            listings.append(listing)
+            for variant in item.get('variants', []):
+                price = variant.get('price', 0)
+                last_updated = variant.get('lastUpdated', 0)
+                sold_date = datetime.utcfromtimestamp(last_updated).isoformat() if last_updated else ''
+                listing = normalize_listing(
+                    listing_id=variant.get('id'),
+                    source='justtcg',
+                    title=item.get('name', 'Unknown'),
+                    sold_price=price,
+                    currency='USD',
+                    sold_date=sold_date,
+                    condition=variant.get('condition', 'Unknown'),
+                    url=item.get('url', ''),
+                    thumbnail=item.get('image', ''),
+                    category='Trading Cards'
+                )
+                listings.append(listing)
         except Exception as e:
             print(f'JustTCG listing parse error: {e}')
             continue
