@@ -37,7 +37,12 @@ own decision.
 Priority order:
 1. Discogs — music, vinyl, CDs (free, instant access, 60 req/min)
 2. Reverb — musical instruments and gear (free, apply, flexible limits)
-3. Etsy — vintage, antiques, handmade (free, apply, 10,000 req/day)
+3. Etsy — vintage, antiques, handmade
+  - 5,000 requests per day = ~208 per hour
+  - With a 60 minute cache, each unique search only hits Etsy once per hour
+  - So you'd need 5,000 unique different searches in a single day before hitting the limit
+  - At early scale that's essentially unlimited
+    - QPS is more relevant; add small delay between requests as precaution
 4. JustTCG — trading cards: Pokemon, MTG, Yu-Gi-Oh (free, instant, 
    20 results/call)
 5. eBay — general marketplace (pursuing via Partner Network)
@@ -159,7 +164,13 @@ own official programs.
 - "List on eBay" affiliate button — links to eBay listing creation
   page via eBay Partner Network affiliate URL. Earns commission while
   giving user a direct path to post.
-
+- Reverb pagination — currently fetches page 1 only. Follow _links.next 
+  to paginate through all results for more complete price data.
+- Reverb HAL+JSON links — currently hardcoding URLs. Should follow 
+  _links from root API response to be resilient to URL structure changes.
+- Books integration — waiting on eBay API access. eBay sold listings 
+  searched by ISBN or title/author is the best source for real used/rare book pricing. 
+  AbeBooks API deprecated, no viable alternative currently.
 ---
 
 ## Decisions Log
